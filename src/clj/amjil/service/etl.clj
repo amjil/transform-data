@@ -35,6 +35,7 @@
     (let [data (drop 1 (jdbc/query db/td (if flag [sql-str date] [sql-str]) {:as-arrays? true}))]
       (as-> (map #(str/join "\t" %) data) m
         (str/join "\r\n" m)
+        (str/replace m #"\\" "")
         (spit filename m :append true)))
     (log/warn "The table name = " table-name " is complated.....")))
 
