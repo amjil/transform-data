@@ -11,7 +11,7 @@
         column-str (column-string table-name)
         flag (not= -1 (.indexOf columns "cal_date"))
         sql-str (str "select " column-str " from " table-name (if flag " where cal_date = ?" " where 1=1"))
-        filename (str "./" date "/" table-name ".txt")
+        filename (str "./data/" date "/" table-name ".txt")
         db-spec (if (= "1" type) db/tdcore db/td)]
     (log/warn "Download table from " (if (= "1" type) " Core " " Front "))
     (log/warn "Download date = " date)
@@ -20,6 +20,7 @@
     (let [data (drop 1 (jdbc/query db-spec (if flag [sql-str date] [sql-str]) {:as-arrays? true}))]
       (as-> (map #(str/join "\t" %) data) m
         (str/join "\r\n" m)
+        (str/replace m #"\\" "")
         (spit filename m :append true)))
     (log/warn "The table name = " table-name " is complated.....")))
 
@@ -28,9 +29,9 @@
         column-str (column-string table-name)
         flag (not= -1 (.indexOf columns "cal_date"))
         sql-str (str "select " column-str " from " table-name (if flag " where cal_date = ?" " where 1=1"))
-        filename (str "./" date "/" table-name ".txt")]
+        filename (str "./data/" date "/" table-name ".txt")]
     (log/warn "The table name = " table-name " is starting.....")
-    (clojure.java.io/make-parents (str "./" date "/a.txt"))
+    (clojure.java.io/make-parents (str "./data/" date "/a.txt"))
     (spit filename "")
     (let [data (drop 1 (jdbc/query db/td (if flag [sql-str date] [sql-str]) {:as-arrays? true}))]
       (as-> (map #(str/join "\t" %) data) m
@@ -40,7 +41,7 @@
     (log/warn "The table name = " table-name " is complated.....")))
 
 (defn export-big [table-name date]
-  (let [filename (str "./" date "/" table-name ".txt")
+  (let [filename (str "./data/" date "/" table-name ".txt")
         column-str (column-string table-name)
         sql-str (str "select " column-str " from " table-name " where cal_date = ?  and lac_id in (select lac_id from pmart.mid_scenery_hotel_any_info where city_id = ?)")]
     (log/warn "The table name = " table-name " is starting.....")
@@ -87,7 +88,7 @@
   (import-datax "1" "pmart.mid_scenery_arry_in_ter_day" date))
 
 (defn export [date]
-  (clojure.java.io/make-parents (str "./" date "/a.txt"))
+  (clojure.java.io/make-parents (str "./data/" date "/a.txt"))
   (let [tables (-> (slurp "withdays.txt") (str/split #"\r\n"))]
     (doall (map #(export-data % date) tables)))
   (let [tables (-> (slurp "nodays.txt") (str/split #"\r\n"))]
