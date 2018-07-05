@@ -98,17 +98,20 @@
 
 (defn transformx [date]
   (let [;job-data (jdbc/query db/sqlite ["select * from job_logs where job_date = ?" date])
-        data (jdbc/query db/tdcore ["SEL a.TXDate as job_date ,a.JOB_BATCH   as  batch_id
+        tables (concat
+                 (-> (slurp "withdays.txt") (str/split #"\r\n"))
+                 (-> (slurp "nodays.txt") (str/split #"\r\n")))
+        tables (map #(last (str/split % #"\.")) tables)
+        table-in (str "('" (str/join "','" tables) "')")
+        sql-str (str "SEL a.TXDate as job_date ,a.JOB_BATCH   as  batch_id
                                       , a.job_nm as job_nm, trim(b.DatabaseName) as dbname
                                       FROM  PVIEW.VW_DSYNC_JOB_DONE a LEFT JOIN DBC.TABLES b
                                       ON a.JOB_NM=b.TABLENAME
                                       where SYNC_DT= ?
                                       and trim(b.DatabaseName) in ('pdata', 'pmart', 'nmart')
-                                      and a.JOB_NM in
-                                      ('rpt_stay_leave_day','rpt_nm_come_day','rpt_outside_come_day','rpt_stay_analy_day','rpt_stay_arry_day','rpt_user_design_anay_day','rpt_scenery_uer_lev_day','rpt_nm_come_line_daily','rpt_scenery_hotel_any_day','rpt_scenery_net_prefer_day','rpt_big_als_track_day','rpt_nm_come_gprs_lev_daily','rpt_nm_come_gsm_lev_daily','rpt_outer_user_daily','rpt_travel_timeing_daily','rpt_site_long_wdaily','rpt_site_long_mdaily','rpt_nm_traveler_daily','rpt_traveler_od_daily','rpt_roma_uer_lev_day','rpt_roma_net_prefer_day','rpt_nm_come_trade_daily','rpt_nm_out_prov_daily','rpt_nm_out_trade_daily','rpt_nm_out_site_long_wdaily','rpt_nm_out_site_long_mdaily','rpt_outside_uer_lev_wdaily','rpt_outside_net_prefer_day','rpt_outside_uer_lev_mdaily','tb_nm_tour','rpt_tra_route_result_day','rpt_scenery_source_day','rpt_scenery_sour_f_day','rpt_trval_info_daily','rpt_user_trval_info_daily','rpt_bigdata_fml_info_daily','rpt_bigdata_fml_bts_day','rpt_scen_hour_subs_daily','rpt_come_user_info_stat','rpt_nm_out_info_daily1','rpt_nm_out_info_daily2','rpt_nm_out_info_daily3','rpt_scen_arry_in_ter_day1','rpt_scen_arry_in_ter_day2','rpt_scen_arry_in_ter_day3','rpt_scen_arry_in_ter_day7','rpt_scen_arry_in_ter_day8','rpt_scen_arry_in_ter_day9',
-                                      'tb_res_nwm_cell_his','rpt_long_stay_user_day','rpt_people_strream_daily1','rpt_people_strream_daily4',
-                                      'rpt_band_area_yx_daily','mid_scenery_arry_in_ter_day', 'rpt_band_area_yx_daily', 'mid_scenery_arry_in_ter_day')
-                                      " date])]
+                                      and a.JOB_NM in "
+                      table-in)
+        data (jdbc/query db/tdcore [sql-str date])]
     (if (empty? data)
       (log/warn "The ETL  date = " date " has not done yet.......")
       (doall
