@@ -18,4 +18,5 @@
                  (GET "/export-big" {params :params} (controller/export-big params))
                  (GET "/import" {params :params} (controller/import params))
                  (GET "/import-table" {params :params} (controller/import-table params))
+                 (GET "/import-url" {params :params} (controller/import-url params))
                  (GET "/check" {params :params} (controller/check params))))

@@ -70,6 +70,15 @@
     (log/warn "The import type = " type)
     (log/warn (-> (.getInputStream process) (io/input-stream) slurp))))
 
+(defn import-url [dir type table date]
+  (let [runtime (Runtime/getRuntime)
+        process (if (= "1" type)
+                  (.exec runtime (str "sh urlload.sh " dir " " date " " table))
+                  (.exec runtime (str "sh urlnoday.sh " dir " " table)))]
+    (.waitFor process)
+    (log/warn "result = " (-> (.getInputStream process) (io/input-stream) slurp))
+    (log/warn "table " table " import success")))
+
 (defn import-datax [type table date]
   (let [runtime (Runtime/getRuntime)
         process (if (= "1" type)

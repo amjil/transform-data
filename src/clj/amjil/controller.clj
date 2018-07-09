@@ -42,6 +42,11 @@
     (etl/export-table type table-name date))
   (-> (response "export table success ") (content-type "text/text") (charset "utf-8")))
 
+(defn import-url [params]
+  (let [[dir type table date] (str/split (:params params) #":")]
+    (etl/import-url dir type table date))
+  (-> (response "import table success ") (content-type "text/text") (charset "utf-8")))
+
 (defn import-table [params]
   (let [[type table date] (str/split (:params params) #":")]
     (etl/import-datax type table date))

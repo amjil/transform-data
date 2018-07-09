@@ -8,6 +8,7 @@
                  [clojurewerkz/quartzite "2.1.0"]
                  [compojure "1.6.1"]
                  [cprop "0.1.11"]
+                 [funcool/cuerdas "2.0.5"]
                  [funcool/struct "1.3.0"]
                  [luminus-http-kit "0.1.6"]
                  [luminus-nrepl "0.1.4"]
