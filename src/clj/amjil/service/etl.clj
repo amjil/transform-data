@@ -3,21 +3,24 @@
             [clojure.string :as str]
             [clojure.tools.logging :as log]
             [clojure.java.io :as io]
-            [amjil.db :as db])
+            [amjil.db :as db]
+            [amjil.config :refer [env]])
   (:use [amjil.service.transform]))
 
 (defn export-table [type table-name date]
   (let [columns (table-column table-name)
         column-str (column-string table-name)
         flag (not= -1 (.indexOf columns "cal_date"))
-        sql-str (str "select " column-str " from " table-name (if flag " where cal_date = ?" " where 1=1"))
+        mon-flag (not= -1 (.indexOf columns "cal_month"))
+        sql-str (str "select " column-str " from " table-name (if flag " where cal_date = ?" " where 1=1") (if mon-flag " and cal_month = ?"))
         filename (str "./data/" date "/" table-name ".txt")
         db-spec (if (= "1" type) db/tdcore db/td)]
     (log/warn "Download table from " (if (= "1" type) " Core " " Front "))
     (log/warn "Download date = " date)
     (log/warn "The table name = " table-name " is starting.....")
+    (clojure.java.io/make-parents (str "./data/" date "/a.txt"))
     (spit filename "")
-    (let [data (drop 1 (jdbc/query db-spec (if flag [sql-str date] [sql-str]) {:as-arrays? true}))]
+    (let [data (drop 1 (jdbc/query db-spec (if (or flag mon-flag) [sql-str date] [sql-str]) {:as-arrays? true}))]
       (as-> (map #(str/join "\t" %) data) m
         (str/join "\r\n" m)
         (str/replace m #"\\" "")
@@ -28,12 +31,13 @@
   (let [columns (table-column table-name)
         column-str (column-string table-name)
         flag (not= -1 (.indexOf columns "cal_date"))
-        sql-str (str "select " column-str " from " table-name (if flag " where cal_date = ?" " where 1=1"))
+        mon-flag (not= -1 (.indexOf columns "cal_month"))
+        sql-str (str "select " column-str " from " table-name (if flag " where cal_date = ?" " where 1=1") (if mon-flag " and cal_month = ?"))
         filename (str "./data/" date "/" table-name ".txt")]
     (log/warn "The table name = " table-name " is starting.....")
     (clojure.java.io/make-parents (str "./data/" date "/a.txt"))
     (spit filename "")
-    (let [data (drop 1 (jdbc/query db/td (if flag [sql-str date] [sql-str]) {:as-arrays? true}))]
+    (let [data (drop 1 (jdbc/query db/td (if (or flag mon-flag) [sql-str date] [sql-str]) {:as-arrays? true}))]
       (as-> (map #(str/join "\t" %) data) m
         (str/join "\r\n" m)
         (str/replace m #"\\" "")
@@ -81,9 +85,14 @@
 
 (defn import-datax [type table date]
   (let [runtime (Runtime/getRuntime)
-        process (if (= "1" type)
-                  (.exec runtime (str "sh load.sh " date " " table))
-                  (.exec runtime (str "sh noday.sh " date " " table)))]
+        table-name (cond
+                     (contains? (:kmart env) table) (str/replace table #"nmart" "kmart")
+                     (contains? (:bigdatamap env) table) (str/replace table #"nmart" "bigdatamap")
+                     :else table)
+        process (cond
+                  (= "1" type) (.exec runtime (str "sh load.sh " date " " table " " table-name))
+                  (= "2" type) (.exec runtime (str "sh noday.sh " date " " table " " table-name))
+                  :else (.exec runtime (str "sh mon.sh " date " " table " " table-name)))]
     (.waitFor process)
     (log/warn "result = " (-> (.getInputStream process) (io/input-stream) slurp))
     (log/warn "table " table " import success")))
