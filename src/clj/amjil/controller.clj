@@ -27,7 +27,7 @@
 (defn export [params]
   (let [current-time (time-format/unparse (time-format/formatters :basic-date-time) (local-time/local-now))]
     (job-base/trigger-job amjil.job.job.ExportJob
-                              { "date" (:date params)}
+                              params
                               (str "export." current-time)
                               (str "export." current-time)))
   (-> (response "export trigger success ") (content-type "text/text") (charset "utf-8")))

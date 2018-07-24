@@ -83,9 +83,10 @@
 (defjob ExportJob
   [ctx]
   (log/warn "ExportJob starting...... ")
-  (let [params (-> (qc/from-job-data ctx) walk/keywordize-keys)]
+  (let [params (-> (qc/from-job-data ctx) walk/keywordize-keys)
+        [type table-name date] (str/split (:params params) #":")]
     (log/warn "Export params = " params)
-    (etl/export (:date params)))
+    (etl/export-table type table-name date))
   (log/warn "ExportJob Ended ........"))
 
 (defjob TransJob
