@@ -12,11 +12,16 @@
         column-str (column-string table-name)
         flag (not= -1 (.indexOf columns "cal_date"))
         mon-flag (not= -1 (.indexOf columns "cal_month"))
-        sql-str (str "select " column-str " from " table-name (if flag " where cal_date = ?" " where 1=1") (if mon-flag " and cal_month = ?"))
+        tname (last (str/split table-name #"\."))
+        tname (cond
+                (contains? (set (:pview env)) tname) (str "pview.vw_" tname)
+                :else table-name)
+        sql-str (str "select " column-str " from " tname (if flag " where cal_date = ?" " where 1=1") (if mon-flag " and cal_month = ?"))
         filename (str "./data/" date "/" table-name ".txt")
         db-spec (if (= "1" type) db/tdcore db/td)]
     (log/warn "Download table from " (if (= "1" type) " Core " " Front "))
     (log/warn "Download date = " date)
+    (log/warn "The Sql Statment = " sql-str)
     (log/warn "The table name = " table-name " is starting.....")
     (clojure.java.io/make-parents (str "./data/" date "/a.txt"))
     (spit filename "")
@@ -32,8 +37,13 @@
         column-str (column-string table-name)
         flag (not= -1 (.indexOf columns "cal_date"))
         mon-flag (not= -1 (.indexOf columns "cal_month"))
-        sql-str (str "select " column-str " from " table-name (if flag " where cal_date = ?" " where 1=1") (if mon-flag " and cal_month = ?"))
+        tname (last (str/split table-name #"\."))
+        tname (cond
+                (contains? (set (:pview env)) tname) (str "pview.vw_" tname)
+                :else table-name)
+        sql-str (str "select " column-str " from " tname (if flag " where cal_date = ?" " where 1=1") (if mon-flag " and cal_month = ?"))
         filename (str "./data/" date "/" table-name ".txt")]
+    (log/warn "The Sql Statment = " sql-str)
     (log/warn "The table name = " table-name " is starting.....")
     (clojure.java.io/make-parents (str "./data/" date "/a.txt"))
     (spit filename "")
@@ -86,8 +96,8 @@
 (defn import-datax [type table date]
   (let [runtime (Runtime/getRuntime)
         table-name (cond
-                     (contains? (:kmart env) table) (str/replace table #"nmart" "kmart")
-                     (contains? (:bigdatamap env) table) (str/replace table #"nmart" "bigdatamap")
+                     (contains? (set (:kmart env)) table) (str/replace table #"nmart" "kmart")
+                     (contains? (set (:bigdatamap env)) table) (str/replace table #"nmart" "bigdatamap")
                      :else table)
         process (cond
                   (= "1" type) (.exec runtime (str "sh load.sh " date " " table " " table-name))
