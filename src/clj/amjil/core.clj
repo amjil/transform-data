@@ -19,6 +19,8 @@
     (-> env
         (assoc  :handler #'handler/app)
         (update :io-threads #(or % (* 2 (.availableProcessors (Runtime/getRuntime)))))
+        ; (update :thread (fn [x] 1))
+        ; (update :worker-name-prefix (fn [x] "myworker-"))
         (update :port #(or (-> env :options :port) %))))
   :stop
   (http/stop http-server))

@@ -10,6 +10,9 @@
             [clojure.string :as str]
             [clojure.java.jdbc :as jdbc]))
 
+(defn test [params]
+  (-> (response "test success ") (content-type "text/text") (charset "utf-8")))
+
 (defn transform [params]
   (let [current-time (time-format/unparse (time-format/formatters :basic-date-time) (local-time/local-now))]
     (job-base/trigger-job amjil.job.job.TransJob
@@ -44,6 +47,7 @@
 
 (defn import-url [params]
   (let [[dir type table date] (str/split (:params params) #":")]
+    (log/warn params)
     (etl/import-url dir type table date))
   (-> (response "import table success ") (content-type "text/text") (charset "utf-8")))
 

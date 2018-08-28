@@ -19,4 +19,5 @@
                  (GET "/import" {params :params} (controller/import params))
                  (GET "/import-table" {params :params} (controller/import-table params))
                  (GET "/import-url" {params :params} (controller/import-url params))
-                 (GET "/check" {params :params} (controller/check params))))
+                 (GET "/check" {params :params} (controller/check params))
+                 (GET "/test" {params :params} (controller/test params))))
