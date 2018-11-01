@@ -11,13 +11,18 @@
   (let [columns (table-column table-name)
         column-str (column-string table-name)
         flag (not= -1 (.indexOf columns "cal_date"))
+        proc-dt-flag (not= -1 (.indexOf columns "proc_dt"))
+        proc-date-flag (not= -1 (.indexOf columns "proc_date"))
         mon-flag (not= -1 (.indexOf columns "cal_month"))
         tname (last (str/split table-name #"\."))
         tname (cond
                 (contains? (set (:pview env)) tname) (str "pview.vw_" tname)
                 (true? ((:trans env) tname)) ((:trans env) tname)
                 :else table-name)
-        sql-str (str "select " column-str " from " tname (if flag " where cal_date = ?" " where 1=1") (if mon-flag " and cal_month = ?"))
+        sql-str (str "select " column-str " from " tname
+                  (if flag " where cal_date = ?" " where 1=1") (if mon-flag " and cal_month = ?")
+                  (if proc-dt-flag " and proc_dt = ?")
+                  (if proc-date-flag  " and proc_date = ?"))
         filename (str "./data/" date "/" table-name ".txt")
         db-spec (if (= "1" type) db/tdcore db/td)]
     (log/warn "Download table from " (if (= "1" type) " Core " " Front "))
@@ -27,28 +32,6 @@
     (clojure.java.io/make-parents (str "./data/" date "/a.txt"))
     (spit filename "")
     (let [data (drop 1 (jdbc/query db-spec (if (or flag mon-flag) [sql-str date] [sql-str]) {:as-arrays? true}))]
-      (as-> (map #(str/join "\t" %) data) m
-        (str/join "\r\n" m)
-        (str/replace m #"\\" "")
-        (spit filename m :append true)))
-    (log/warn "The table name = " table-name " is complated.....")))
-
-(defn export-data [table-name date]
-  (let [columns (table-column table-name)
-        column-str (column-string table-name)
-        flag (not= -1 (.indexOf columns "cal_date"))
-        mon-flag (not= -1 (.indexOf columns "cal_month"))
-        tname (last (str/split table-name #"\."))
-        tname (cond
-                (contains? (set (:pview env)) tname) (str "pview.vw_" tname)
-                :else table-name)
-        sql-str (str "select " column-str " from " tname (if flag " where cal_date = ?" " where 1=1") (if mon-flag " and cal_month = ?"))
-        filename (str "./data/" date "/" table-name ".txt")]
-    (log/warn "The Sql Statment = " sql-str)
-    (log/warn "The table name = " table-name " is starting.....")
-    (clojure.java.io/make-parents (str "./data/" date "/a.txt"))
-    (spit filename "")
-    (let [data (drop 1 (jdbc/query db/td (if (or flag mon-flag) [sql-str date] [sql-str]) {:as-arrays? true}))]
       (as-> (map #(str/join "\t" %) data) m
         (str/join "\r\n" m)
         (str/replace m #"\\" "")
@@ -119,9 +102,9 @@
 (defn export [date]
   (clojure.java.io/make-parents (str "./data/" date "/a.txt"))
   (let [tables (-> (slurp "withdays.txt") (str/split #"\r\n"))]
-    (doall (map #(export-data % date) tables)))
+    (doall (map #(export-table "2" % date) tables)))
   (let [tables (-> (slurp "nodays.txt") (str/split #"\r\n"))]
-    (doall (map #(export-data % date) tables)))
+    (doall (map #(export-table "2" % date) tables)))
   (export-big "nmart.rpt_band_area_yx_daily" date)
   (export-big "pmart.mid_scenery_arry_in_ter_day" date))
 
@@ -137,7 +120,7 @@
                                       FROM  PVIEW.VW_DSYNC_JOB_DONE a LEFT JOIN DBC.TABLES b
                                       ON a.JOB_NM=b.TABLENAME
                                       where SYNC_DT= ?
-                                      and trim(b.DatabaseName) in ('pdata', 'pmart', 'nmart')
+                                      and trim(b.DatabaseName) in ('pdata', 'pmart', 'nmart', 'BASS1','DBODATA','KDDMART')
                                       and a.JOB_NM in "
                       table-in)
         data (jdbc/query db/tdcore [sql-str date])]
@@ -152,7 +135,7 @@
             (if (empty? job-done)
               (do
                 (jdbc/insert! db/sqlite :job_logs (select-keys d [:job_nm :job_date :batch_id]))
-                (export-data table date)
+                (export-table "2" table date)
                 (let [cols (table-column table)
                       flag (not= -1 (.indexOf cols "cal_date"))]
                   (log/warn "import table's type = " (if flag 1 2))

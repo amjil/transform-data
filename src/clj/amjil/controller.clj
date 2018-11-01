@@ -24,7 +24,7 @@
 (defn export-once [params]
   (clojure.java.io/make-parents "once/a.txt")
   (let [tables (-> (slurp "once.txt") (str/split #"\r\n"))]
-    (doall (map #(etl/export-data % (:date params)) tables)))
+    (doall (map #(etl/export-table "2" % (:date params)) tables)))
   (-> (response "export trigger success ") (content-type "text/text") (charset "utf-8")))
 
 (defn export [params]
