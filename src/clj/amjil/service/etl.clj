@@ -15,6 +15,7 @@
         tname (last (str/split table-name #"\."))
         tname (cond
                 (contains? (set (:pview env)) tname) (str "pview.vw_" tname)
+                (true? ((:trans env) tname)) ((:trans env) tname)
                 :else table-name)
         sql-str (str "select " column-str " from " tname (if flag " where cal_date = ?" " where 1=1") (if mon-flag " and cal_month = ?"))
         filename (str "./data/" date "/" table-name ".txt")
