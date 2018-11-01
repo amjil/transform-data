@@ -4,7 +4,8 @@
             [clojure.tools.logging :as log]
             [clojure.java.io :as io]
             [amjil.db :as db]
-            [amjil.config :refer [env]])
+            [amjil.config :refer [env]]
+            [clj-time.format :as time-format])
   (:use [amjil.service.transform]))
 
 (defn export-table [type table-name date]
@@ -31,7 +32,14 @@
     (log/warn "The table name = " table-name " is starting.....")
     (clojure.java.io/make-parents (str "./data/" date "/a.txt"))
     (spit filename "")
-    (let [data (drop 1 (jdbc/query db-spec (if (or flag mon-flag) [sql-str date] [sql-str]) {:as-arrays? true}))]
+    (let [data (drop 1 (jdbc/query db-spec
+                                  (cond
+                                    (true? flag) [sql-str date]
+                                    (or mon-flag proc-dt-flag proc-date-flag)
+                                    (let [month (time-format/parse (time-format/formatter "yyyy/MM/dd") date)
+                                          mon-str (time-format/unparse (time-format/formatter "yyyyMM") month)]
+                                      [sql-str mon-str])
+                                    :else [sql-str]) {:as-arrays? true}))]
       (as-> (map #(str/join "\t" %) data) m
         (str/join "\r\n" m)
         (str/replace m #"\\" "")
