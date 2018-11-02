@@ -20,9 +20,19 @@
     "proc_date"   [1 2 "proc_date = ?"]
     [0 1 "1=1"]))
 
-(defn gen-sql-from-table
-  [name date]
-  (let [columns (table-column name)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn view-columns [name]
+  (let [view-def (-> (jdbc/query db/td [(str "show view " name)])
+                     first
+                     (get (keyword "request text"))
+                     str/lower-case)
+        view-find-cols (first (re-find #"(?<=\()(\s|\w|\r|,)+(?=\)\s+as)" view-def))]
+    (-> (str/replace view-find-cols #"\r+|\s+" "")
+        (str/split #","))))
+
+(defn gen-sql
+  [type name date]
+  (let [columns (if (= 1 type) (table-column name) (view-columns name))
         [cond-type date-type where-cond] (sql-condition columns)
         selects (column-string columns)
         sql (str "select " selects " from " name " where " where-cond)]
@@ -31,17 +41,6 @@
                1 date
                2 (subs date 0 6))]
       0 [sql])))
-
-(defn gen-sql-from-view
-  [name date]
-  nil)
-
-(defn gen-sql [name type]
-  "type => 1 from table 2 from view"
-  (condp = type
-    "1" (gen-sql-from-table name)
-    "2" (gen-sql-from-view name)))
-
 ;
 ; (re-find #"(?<=\()(\s|\w|\r|,)+(?=\))" xx)
 ;REPLACE VIEW PVIEW.VW_CDE_STREAM\r(\r      STREAM_LEVEL \r      ,STREAM   \r)\rAS LOCKING NMART.CDE_STREAM FOR ACCESS \rSELECT\r      STREAM_LEVEL (TITLE '流量层次'),\r      STREAM
