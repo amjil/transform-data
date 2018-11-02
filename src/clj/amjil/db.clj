@@ -14,6 +14,17 @@
                     (.setCLIENT_CHARSET "cp936")
                     (.setDbsPort (:td-port env)))})
 
+(mount/defstate ^{:on-reload :noop} fast
+  :start
+  {:datasource (doto (com.teradata.jdbc.TeraDataSource.)
+                    (.setDatabaseName "NGBASS")
+                    (.setUser (:td-username env))
+                    (.setpassword (:td-password env))
+                    (.setDSName (:td-server env))
+                    (.setTYPE "FASTEXPORT")
+                    (.setCLIENT_CHARSET "cp936")
+                    (.setDbsPort (:td-port env)))})
+
 (mount/defstate ^{:on-reload :noop} tdcore
   :start
   {:datasource (doto (com.teradata.jdbc.TeraDataSource.)

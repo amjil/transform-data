@@ -18,7 +18,7 @@
         tname (last (str/split table-name #"\."))
         tname (cond
                 (contains? (set (:pview env)) tname) (str "pview.vw_" tname)
-                (true? ((:trans env) tname)) ((:trans env) tname)
+                (not (empty? (get (:trans env) tname))) (get (:trans env) tname)
                 :else table-name)
         sql-str (str "select " column-str " from " tname
                   (if flag " where cal_date = ?" " where 1=1") (if mon-flag " and cal_month = ?")
@@ -36,8 +36,10 @@
                                   (cond
                                     (true? flag) [sql-str date]
                                     (or mon-flag proc-dt-flag proc-date-flag)
-                                    (let [month (time-format/parse (time-format/formatter "yyyy/MM/dd") date)
-                                          mon-str (time-format/unparse (time-format/formatter "yyyyMM") month)]
+                                    ; (let [month (time-format/parse (time-format/formatter "yyyy/MM/dd") date)
+                                    ;       mon-str (time-format/unparse (time-format/formatter "yyyyMM") month)]
+                                    (let [mon-str (subs date 0 6)]
+                                      (log/warn "The Sql Statment month = " mon-str)
                                       [sql-str mon-str])
                                     :else [sql-str]) {:as-arrays? true}))]
       (as-> (map #(str/join "\t" %) data) m
