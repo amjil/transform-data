@@ -18,7 +18,7 @@
     "cal_month"   [1 2 "cal_month = ?"]
     "proc_dt"     [1 2 "proc_dt = ?"]
     "proc_date"   [1 2 "proc_date = ?"]
-    [0 1 "1=1"]))
+                  [0 1 "1=1"]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn view-columns [name]
@@ -32,7 +32,9 @@
 
 (defn gen-sql
   [type name date]
-  (let [columns (if (= 1 type) (table-column name) (view-columns name))
+  (let [columns (if (= 1 type)
+                  (table-column name)
+                  (view-columns name))
         [cond-type date-type where-cond] (sql-condition columns)
         selects (column-string columns)
         sql (str "select " selects " from " name " where " where-cond)]
@@ -41,7 +43,33 @@
                1 date
                2 (subs date 0 6))]
       0 [sql])))
-;
-; (re-find #"(?<=\()(\s|\w|\r|,)+(?=\))" xx)
-;REPLACE VIEW PVIEW.VW_CDE_STREAM\r(\r      STREAM_LEVEL \r      ,STREAM   \r)\rAS LOCKING NMART.CDE_STREAM FOR ACCESS \rSELECT\r      STREAM_LEVEL (TITLE '流量层次'),\r      STREAM
-; (TITLE '流量')\r FROM NMART.CDE_STREAM;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn query-td-job-log [date]
+  (let [tables (concat
+                 (-> (slurp "withdays.txt") (str/split #"\r\n"))
+                 (-> (slurp "nodays.txt") (str/split #"\r\n")))
+        tables (map #(last (str/split % #"\.")) tables)
+        table-in (str "('" (str/join "','" tables) "')")
+        sql-str (str "SEL a.TXDate as job_date ,a.JOB_BATCH   as  batch_id
+                                      , a.job_nm as job_nm, trim(b.DatabaseName) as dbname
+                                      FROM  PVIEW.VW_DSYNC_JOB_DONE a LEFT JOIN DBC.TABLES b
+                                      ON a.JOB_NM=b.TABLENAME
+                                      where SYNC_DT= ?
+                                      and trim(b.DatabaseName) in ('pdata', 'pmart', 'nmart', 'BASS1','DBODATA','KDDMART')
+                                      and a.JOB_NM in "
+                      table-in)]
+    (jdbc/query db/tdcore [sql-str date])))
+
+(defn query-sqlite-job-log [date]
+  (jdbc/query db/sqlite ["select * from job_logs where job_date = ?" date]))
+
+(defn job-prepare-sync [date]
+  (let [td-jobs (query-td-job-log date)
+        done-jobs (query-sqlite-job-log date)
+        prepared-jobs (clojure.set/difference (set (map #(:job_nm %) td-jobs))
+                                              (set (map #(:job_nm %) done-jobs)))
+        sync-jobs (filter #(contains? prepared-jobs (:job_nm %) td-jobs))]
+    (doall
+      nil)))
