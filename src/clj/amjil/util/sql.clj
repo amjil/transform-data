@@ -13,12 +13,13 @@
     (str/join ",")))
 
 (defn sql-condition [columns]
+  "return type : 1st has partition 2nd date or month"
   (condp #(contains? (set %2) %1) columns
     "cal_date"    [1 1 "cal_date = ?"]
     "cal_month"   [1 2 "cal_month = ?"]
     "proc_dt"     [1 2 "proc_dt = ?"]
     "proc_date"   [1 2 "proc_date = ?"]
-                  [0 1 "1=1"]))
+                  [0 0 "1=1"]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn view-columns [name]
@@ -44,7 +45,20 @@
                2 (subs date 0 6))]
       0 [sql])))
 
+(defn table-name [type name]
+  "type: 1 unload 2 load"
+  (let [table-name (-> (str/split name #"\.") last)
+        tname (get (:trans table-name) (if (= 1 type) :unload :load))]
+    (if-not (empty? tname)
+      tname
+      name)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn query-sqlite-job-log [job]
+  (let [date (:job_date job)
+        job-name (:job-nm job)]
+    (jdbc/query db/sqlite ["select * from job_logs where job_date = ? and job_nm = ?" date job-name])))
 
 (defn query-td-job-log [date]
   (let [tables (concat
@@ -61,15 +75,3 @@
                                       and a.JOB_NM in "
                       table-in)]
     (jdbc/query db/tdcore [sql-str date])))
-
-(defn query-sqlite-job-log [date]
-  (jdbc/query db/sqlite ["select * from job_logs where job_date = ?" date]))
-
-(defn job-prepare-sync [date]
-  (let [td-jobs (query-td-job-log date)
-        done-jobs (query-sqlite-job-log date)
-        prepared-jobs (clojure.set/difference (set (map #(:job_nm %) td-jobs))
-                                              (set (map #(:job_nm %) done-jobs)))
-        sync-jobs (filter #(contains? prepared-jobs (:job_nm %) td-jobs))]
-    (doall
-      nil)))
