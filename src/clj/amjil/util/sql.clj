@@ -32,8 +32,9 @@
         (str/split #","))))
 
 (defn gen-sql
-  [type name date]
-  (let [columns (if (= 1 type)
+  [name date]
+  (let [type (str/starts-with? (str/lower-case name) "pview.")
+        columns (if type
                   (table-column name)
                   (view-columns name))
         [cond-type date-type where-cond] (sql-condition columns)
@@ -45,13 +46,14 @@
                2 (subs date 0 6))]
       0 [sql])))
 
-(defn table-name [type name]
-  "type: 1 unload 2 load"
-  (let [table-name (-> (str/split name #"\.") last)
-        tname (get (:trans table-name) (if (= 1 type) :unload :load))]
-    (if-not (empty? tname)
-      tname
-      name)))
+(defn table-name [name]
+  (let [table-conf (get (:table-conf env) name)]
+    (if (empty? table-conf)
+      [name name]
+      (let [out (get table-conf :unload)
+            in  (get table-conf :load)]
+        [(if (empty? out) name out)
+         (if (empty? in)  name in)]))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -61,9 +63,7 @@
     (jdbc/query db/sqlite ["select * from job_logs where job_date = ? and job_nm = ?" date job-name])))
 
 (defn query-td-job-log [date]
-  (let [tables (concat
-                 (-> (slurp "withdays.txt") (str/split #"\r\n"))
-                 (-> (slurp "nodays.txt") (str/split #"\r\n")))
+  (let [tables (:tables env)
         tables (map #(last (str/split % #"\.")) tables)
         table-in (str "('" (str/join "','" tables) "')")
         sql-str (str "SEL a.TXDate as job_date ,a.JOB_BATCH   as  batch_id
@@ -75,3 +75,5 @@
                                       and a.JOB_NM in "
                       table-in)]
     (jdbc/query db/tdcore [sql-str date])))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
