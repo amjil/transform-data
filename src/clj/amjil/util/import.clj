@@ -7,5 +7,7 @@
 
 (defn import [type file table]
   (let [sh-out (shell/sh "sh" "-c" (str "etlload.sh " type " " file " " table))]
-    (log/warn "Shell status = " (:exit sh-out))
+    (if-not (= 0 (:exit sh-out))
+      (log/error "Shell status = " (:exit sh-out))
+      (log/warn "Shell status = " (:exit sh-out)))
     (log/warn "Shell output = " (:out sh-out))))
