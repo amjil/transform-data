@@ -9,7 +9,7 @@
 (defn etl-transaction [date name]
   (let [[out outtype in] (sql/table-name name)
         sql (sql/gen-sql out date)
-        filename (str date "/" name ".txt")
+        filename (str "./data/" date "/" name ".txt")
         im-type (if (= 1 (count sql)) 0 1)]
     (if (= 1 outtype)
       (fast/fast-export filename sql)
