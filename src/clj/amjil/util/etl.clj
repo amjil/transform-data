@@ -12,8 +12,8 @@
         filename (str date "/" name ".txt")
         im-type (if (= 1 (count sql)) 0 1)]
     (if (= 1 outtype)
-      (export/unload-to-file filename sql)
-      (fast/fast-export filename sql))
+      (fast/fast-export filename sql)
+      (export/unload-to-file filename sql))
     (let [file (io/as-file filename)]
       (if (and (.exists file) (< 0 (.length file)))
         (im/import im-type filename name)
