@@ -1,9 +1,9 @@
 (ns amjil.util.export)
 
-(defn unload-to-file [date file sql]
+(defn unload-to-file [file sql]
   (let [data (drop 1 (jdbc/query db/td sql {:as-arrays? true}))
-        filename (str "./data/" date "/" file ".txt")]
-    (clojure.java.io/make-parents (str "./data/" date "/a.txt"))
+        filename (str "./data/" file)]
+    (clojure.java.io/make-parents filename)
     (spit filename "")
     (as-> (map #(str/join "\t" %) data) m
       (str/join "\r\n" m)

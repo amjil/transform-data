@@ -51,9 +51,12 @@
     (if (empty? table-conf)
       [name name]
       (let [out (get table-conf :unload)
+            outtype (get table-conf :otype)
             in  (get table-conf :load)]
         [(if (empty? out) name out)
-         (if (empty? in)  name in)]))))
+         otype
+         (if (empty? in)  name in)
+         itype]))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
