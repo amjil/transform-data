@@ -55,8 +55,7 @@
             in  (get table-conf :load)]
         [(if (empty? out) name out)
          otype
-         (if (empty? in)  name in)
-         itype]))))
+         (if (empty? in)  name in)]))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
