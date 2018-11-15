@@ -1,5 +1,6 @@
 (ns amjil.util.fastexport
-  (:require [amjil.db :as db]))
+  (:require [amjil.db :as db]
+            [clojure.java.jdbc :as jdbc]))
 
 (defn- get-connection [d]
   (.getConnection (:datasource d)))

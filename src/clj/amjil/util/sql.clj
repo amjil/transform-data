@@ -1,5 +1,6 @@
 (ns amjil.util.sql
   (:require [amjil.db :as db]
+            [amjil.config :refer [env]]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]))
 
@@ -54,7 +55,7 @@
             outtype (get table-conf :otype)
             in  (get table-conf :load)]
         [(if (empty? out) name out)
-         otype
+         outtype
          (if (empty? in)  name in)]))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

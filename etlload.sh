@@ -25,7 +25,8 @@ fi
 echo "table name is $4 \n">> ${logfile}
 echo "table name is $4 \n">> ${logfile}
 
-sql="load data local infile 'data/$2' into table $4 lines terminated by '\r\n';"
+sql="load data local infile '$2' into table $4 lines terminated by '\r\n';"
+echo "$sql" >> ${logfile}
 if [ $1 == "1" ]; then
   sql1="alter table $4 truncate partition part_$3;"
   mysql -h${ip} -P 8761 -u${user} -p${password} <<EOFMYSQL
@@ -41,3 +42,4 @@ else
     exit;
   EOFMYSQL
 fi
+echo "import ends \n">> ${logfile}
