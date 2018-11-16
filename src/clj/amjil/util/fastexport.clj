@@ -1,6 +1,7 @@
 (ns amjil.util.fastexport
   (:require [amjil.db :as db]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [clojure.string :as str]))
 
 (defn- get-connection [d]
   (.getConnection (:datasource d)))
@@ -13,7 +14,7 @@
 (defn- unload-to-file [conn file sql]
   (with-open [w (clojure.java.io/writer file :append true)]
     (as-> (exec-statment conn sql) m
-          (map #(clojure.string/join #"\t" %) m)
+          (map #(str/join #"\t" %) m)
           (doseq [line m]
             (.write w line)
             (.newLine w)))
@@ -30,9 +31,9 @@
 (defn fast-export [file sql]
   (jdbc/db-query-with-resultset db/fast sql
     (fn [rs]
-      (with-open [w (clojure.java.io/writer file :append true)]
+      (with-open [w (clojure.java.io/writer file :append false)]
         (as-> (drop 1 (jdbc/result-set-seq rs {:as-arrays? true})) m
-              (map #(clojure.string/join #"\t" %) m)
+              (map #(str/replace (str/join "\t" %) #"\\" "") m)
               (doseq [line m]
                 (.write w (str line "\r\n"))))
                 ; (.newLine w)
