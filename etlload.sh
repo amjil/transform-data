@@ -1,5 +1,6 @@
 #!/bin/bash
 ip="10.221.175.148"
+#ip="10.220.5.71"
 user="root"
 password="123456"
 
@@ -32,14 +33,14 @@ if [ $1 == "1" ]; then
   mysql -h${ip} -P 8761 -u${user} -p${password} <<EOFMYSQL
     ${sql1};
     ${sql};
-    exit;
-  EOFMYSQL
+    exit
+EOFMYSQL
 else
   sql1="truncate table $4;"
   mysql -h${ip} -P 8761 -u${user} -p${password} <<EOFMYSQL
     ${sql1};
     ${sql};
-    exit;
-  EOFMYSQL
+    exit
+EOFMYSQL
 fi
 echo "import ends \n">> ${logfile}

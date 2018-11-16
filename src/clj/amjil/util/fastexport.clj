@@ -34,6 +34,6 @@
         (as-> (drop 1 (jdbc/result-set-seq rs {:as-arrays? true})) m
               (map #(clojure.string/join #"\t" %) m)
               (doseq [line m]
-                (.write w line)
-                (.newLine w)))
+                (.write w (str line "\r\n"))))
+                ; (.newLine w)
         (.flush w)))))

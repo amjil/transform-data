@@ -33,4 +33,8 @@
             (if (empty? job-done)
               (do
                 (etl/etl-transaction date table)
-                (jdbc/insert! db/sqlite :job_logs (select-keys d [:job_nm :job_date :batch_id]))))))))))
+                (let [filename (str "./data/" date "/" table ".txt")
+                      file (io/as-file filename)]
+                  (if (.exists file)
+                    (jdbc/insert! db/sqlite :job_logs (select-keys d [:job_nm :job_date :batch_id]))
+                    (log/error "File is zero content!!!")))))))))))
