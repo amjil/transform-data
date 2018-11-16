@@ -36,8 +36,8 @@
   [name date]
   (let [type (str/starts-with? (str/lower-case name) "pview.")
         columns (if type
-                  (table-column name)
-                  (view-columns name))
+                  (view-columns name)
+                  (table-column name))
         [cond-type date-type where-cond] (sql-condition columns)
         selects (column-string columns)
         sql (str "select " selects " from " name " where " where-cond)]
@@ -50,12 +50,12 @@
 (defn table-name [name]
   (let [table-conf (get (:table-conf env) name)]
     (if (empty? table-conf)
-      [name name]
+      [name 1 name]
       (let [out (get table-conf :unload)
             outtype (get table-conf :otype)
             in  (get table-conf :load)]
         [(if (empty? out) name out)
-         outtype
+         (if (empty? outtype) 1 outtype)
          (if (empty? in)  name in)]))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

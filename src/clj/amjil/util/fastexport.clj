@@ -28,11 +28,12 @@
 ;   (fast-export- db/fast file sql))
 
 (defn fast-export [file sql]
-  (let [data (jdbc/db-query-with-resultset db/fast sql #(drop 1 (jdbc/result-set-seq % {:as-arrays? true})))]
-    (with-open [w (clojure.java.io/writer file :append true)]
-      (as-> data m
-            (map #(clojure.string/join #"\t" %) m)
-            (doseq [line m]
-              (.write w line)
-              (.newLine w)))
-      (.flush w))))
+  (jdbc/db-query-with-resultset db/fast sql
+    (fn [rs]
+      (with-open [w (clojure.java.io/writer file :append true)]
+        (as-> (drop 1 (jdbc/result-set-seq rs {:as-arrays? true})) m
+              (map #(clojure.string/join #"\t" %) m)
+              (doseq [line m]
+                (.write w line)
+                (.newLine w)))
+        (.flush w)))))

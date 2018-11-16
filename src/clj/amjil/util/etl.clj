@@ -13,6 +13,7 @@
         im-type (if (= 1 length-of-sql) 0 1)
         date (if (= 1 length-of-sql) date (last sql))
         filename (str "./data/" date "/" name ".txt")]
+    (clojure.java.io/make-parents filename)
     (if (= 0 outtype)
       (export/unload-to-file filename sql)
       (fast/fast-export filename sql))
@@ -29,6 +30,10 @@
         im-type (if (= 1 length-of-sql) 0 1)
         date (if (= 1 length-of-sql) date (last sql))
         filename (str "./data/" date "/" name ".txt")]
+    (clojure.java.io/make-parents filename)
     (if (= 0 outtype)
       (export/unload-to-file filename sql)
-      (fast/fast-export filename sql))))
+      (fast/fast-export filename sql))
+    (let [file (io/as-file filename)]
+      (if-not (and (.exists file) (< 0 (.length file)))
+        (log/error "File is zero content!!!")))))
