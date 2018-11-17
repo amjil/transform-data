@@ -14,4 +14,5 @@
                  (GET "/import-async" {params :params} (controller/import-async params))
                  (GET "/import-url" {params :params} (controller/import-with-file-url params))
                  (GET "/check" {params :params} (controller/check params))
+                 (GET "/refresh-config" [] (controller/refresh-config))
                  (GET "/test" {params :params} (controller/test params))))

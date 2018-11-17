@@ -1,7 +1,9 @@
 (ns amjil.controller
   (:require [clojure.tools.logging :as log]
             [ring.util.response :refer [response content-type charset]]
+            [mount.core :as mount]
             [amjil.db :as db]
+            [amjil.config :refer [env]]
             [amjil.job.base :as job-base]
             [amjil.job.job :as job-main]
             [amjil.util.etl :as etl]
@@ -75,3 +77,8 @@
 (defn unlock-batch [params]
   (let [result (jdbc/delete! db/sqlite :job_logs ["batch_id = ?" (:batch params)])]
     (-> (response (str "success " result)) (content-type "text/html") (charset "utf-8"))))
+
+(defn refresh-config []
+  (mount/stop #'amjil.config/env)
+  (mount/start #'amjil.config/env)
+  (-> (response "success\n")) (content-type "text/html") (charset "utf-8"))

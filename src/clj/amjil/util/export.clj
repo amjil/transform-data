@@ -8,7 +8,6 @@
         filename file]
     (clojure.java.io/make-parents filename)
     (spit filename "")
-    (as-> (map #(str/join "\t" %) data) m
+    (as-> (map #(str/replace (str/join "\t" %) #"\\" "") data) m
       (str/join "\r\n" m)
-      (str/replace m #"\\" "")
       (spit filename m :append true))))
