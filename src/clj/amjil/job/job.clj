@@ -33,7 +33,8 @@
 (defjob TransJob
   [ctx]
   (log/warn "TransJob starting...... ")
-  (let [params (-> (qc/from-job-data ctx) walk/keywordize-keys)]
+  (let [params (-> (qc/from-job-data ctx) walk/keywordize-keys)
+        [table-name date] (str/split (:params params) #":")]
     (log/warn "Trans params = " params)
-    (etl/transformx (:date params)))
+    (ex/etl-transaction date table-name))
   (log/warn "TransJob Ended ........"))

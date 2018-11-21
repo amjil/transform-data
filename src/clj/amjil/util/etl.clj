@@ -4,6 +4,7 @@
             [amjil.util.import :as im]
             [amjil.util.sql :as sql]
             [amjil.config :refer [env]]
+            [amjil.db :as db]
             [clojure.tools.logging :as log]
             [clojure.java.io :as io]))
 
@@ -14,31 +15,41 @@
       imtype)))
 
 (defn etl-params [date name]
-  (let [[out outtype in] (sql/table-name name)
-        sql (sql/gen-sql out date)
+  (let [[out outtype in db-type] (sql/table-name name)
+        dbconn (condp = db-type
+                 0 db/td
+                 1 db/fast
+                 2 db/tdcore)
+        sql (sql/gen-sql dbconn out date)
         length-of-sql (count sql)
         im-type (import-type name (if (= 1 length-of-sql) 0 1))
         date (if (= 1 length-of-sql) date (last sql))
         filename (str "./data/" date "/" name ".txt")]
     (clojure.java.io/make-parents filename)
-    [outtype im-type filename date sql]))
+    [outtype im-type filename date dbconn sql]))
 
 (defn etl-transaction [date name]
-  (let [[outtype im-type filename date sql] (etl-params date name)]
+  (let [[outtype im-type filename date dbconn sql] (etl-params date name)]
     (if (= 0 outtype)
-      (export/unload-to-file filename sql)
-      (fast/fast-export filename sql))
+      (export/unload-to-file dbconn filename sql)
+      (fast/fast-export dbconn filename sql))
     (let [file (io/as-file filename)]
       (if (and (.exists file) (< 0 (.length file)))
         (im/import im-type filename date name)
         (log/error "File is zero content!!!")))))
 
-
 (defn etl-export [date name]
-  (let [[outtype im-type filename date sql] (etl-params date name)]
+  (let [[outtype im-type filename date dbconn sql] (etl-params date name)]
     (if (= 0 outtype)
-      (export/unload-to-file filename sql)
-      (fast/fast-export filename sql))
+      (export/unload-to-file dbconn filename sql)
+      (fast/fast-export dbconn filename sql))
     (let [file (io/as-file filename)]
       (if-not (and (.exists file) (< 0 (.length file)))
+        (log/error "File is zero content!!!")))))
+
+(defn etl-import [date name]
+  (let [[outtype im-type filename date dbconn sql] (etl-params date name)]
+    (let [file (io/as-file filename)]
+      (if (and (.exists file) (< 0 (.length file)))
+        (im/import im-type filename date name)
         (log/error "File is zero content!!!")))))

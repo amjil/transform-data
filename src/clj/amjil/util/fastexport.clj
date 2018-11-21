@@ -28,8 +28,8 @@
 ; (defn fast-export [file sql]
 ;   (fast-export- db/fast file sql))
 
-(defn fast-export [file sql]
-  (jdbc/db-query-with-resultset db/fast sql
+(defn fast-export [dbconn file sql]
+  (jdbc/db-query-with-resultset dbconn sql
     (fn [rs]
       (with-open [w (clojure.java.io/writer file :append false)]
         (as-> (drop 1 (jdbc/result-set-seq rs {:as-arrays? true})) m

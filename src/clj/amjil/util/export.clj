@@ -3,8 +3,8 @@
             [clojure.string :as str]
             [amjil.db :as db]))
 
-(defn unload-to-file [file sql]
-  (let [data (drop 1 (jdbc/query db/td sql {:as-arrays? true}))
+(defn unload-to-file [dbconn file sql]
+  (let [data (drop 1 (jdbc/query dbconn sql {:as-arrays? true}))
         filename file]
     (clojure.java.io/make-parents filename)
     (spit filename "")

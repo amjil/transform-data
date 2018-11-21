@@ -44,9 +44,8 @@
   (-> (response "import table success ") (content-type "text/text") (charset "utf-8")))
 
 (defn import [params]
-  (let [[type table date] (str/split (:params params) #":")
-        filename (str "./data/" date "/" table ".txt")]
-    (im/import type filename date table))
+  (let [[table-name date] (str/split (:params params) #":")]
+    (etl/etl-import date table-name))
   (-> (response "import table success ") (content-type "text/text") (charset "utf-8")))
 
 (defn import-async [params]

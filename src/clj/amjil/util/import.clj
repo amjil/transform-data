@@ -6,7 +6,7 @@
             [clojure.java.io :as io]))
 
 (defn import [type file date table]
-  (let [sh-out (shell/sh "sh" "-c" (str "etlload.sh " type " " file " " date " " table))]
+  (let [sh-out (shell/sh "etlload.sh" type file date table)]
     (if-not (= 0 (:exit sh-out))
       (log/error "Shell status = " (:exit sh-out))
       (log/warn "Shell status = " (:exit sh-out)))

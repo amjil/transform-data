@@ -4,8 +4,8 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]))
 
-(defn table-column [name]
-  (let [db-result (jdbc/query db/td [(str "help table " name)])
+(defn table-column [conn name]
+  (let [db-result (jdbc/query conn [(str "help table " name)])
         stringified-cols (map #(get (clojure.walk/stringify-keys %) "column name") db-result)]
     (map #(-> % str/trim str/lower-case) stringified-cols)))
 
@@ -23,8 +23,8 @@
                   [0 0 "1=1"]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn view-columns [name]
-  (let [view-def (-> (jdbc/query db/td [(str "show view " name)])
+(defn view-columns [conn name]
+  (let [view-def (-> (jdbc/query conn [(str "show view " name)])
                      first
                      (get (keyword "request text"))
                      str/lower-case)
@@ -33,11 +33,11 @@
         (str/split #","))))
 
 (defn gen-sql
-  [name date]
+  [conn name date]
   (let [type (str/starts-with? (str/lower-case name) "pview.")
         columns (if type
-                  (view-columns name)
-                  (table-column name))
+                  (view-columns conn name)
+                  (table-column conn name))
         [cond-type date-type where-cond] (sql-condition columns)
         selects (column-string columns)
         sql (str "select " selects " from " name " where " where-cond)]
@@ -50,13 +50,15 @@
 (defn table-name [name]
   (let [table-conf (get (:table-conf env) name)]
     (if (empty? table-conf)
-      [name 1 name]
+      [name 1 name 1]
       (let [out (get table-conf :unload)
             outtype (get table-conf :otype)
-            in  (get table-conf :load)]
+            in  (get table-conf :load)
+            db-type  (get table-conf :db-type)]
         [(if (empty? out) name out)
          (if (empty? outtype) 1 outtype)
-         (if (empty? in)  name in)]))))
+         (if (empty? in)  name in)
+         (if (empty? db-type) 0 db-type)]))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
