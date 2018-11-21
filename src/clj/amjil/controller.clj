@@ -80,4 +80,4 @@
 (defn refresh-config []
   (mount/stop #'amjil.config/env)
   (mount/start #'amjil.config/env)
-  (-> (response "success\n")) (content-type "text/html") (charset "utf-8"))
+  (-> (response "success\n") (content-type "text/html") (charset "utf-8")))
