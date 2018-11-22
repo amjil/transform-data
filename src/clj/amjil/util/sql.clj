@@ -56,9 +56,9 @@
             in  (get table-conf :load)
             db-type  (get table-conf :db-type)]
         [(if (empty? out) name out)
-         (if (empty? outtype) 1 outtype)
+         (if (number? outtype) outtype 1)
          (if (empty? in)  name in)
-         (if (empty? db-type) 0 db-type)]))))
+         (if (number? db-type) db-type 1)]))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
