@@ -30,6 +30,14 @@
     (ex/etl-export date table-name))
   (log/warn "ExportJob Ended ........"))
 
+(defjob TransformJob
+  [ctx]
+  (log/warn "TransformJob starting...... ")
+  (let [params (-> (qc/from-job-data ctx) walk/keywordize-keys)]
+    (log/warn "Transform params = " params)
+    (etl/transformx (:date params)))
+  (log/warn "TransformJob Ended ........"))
+
 (defjob TransJob
   [ctx]
   (log/warn "TransJob starting...... ")

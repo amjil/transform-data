@@ -18,7 +18,7 @@
 
 (defn transform [params]
   (let [current-time (time-format/unparse (time-format/formatters :basic-date-time) (local-time/local-now))]
-    (job-base/trigger-job amjil.job.job.TransJob
+    (job-base/trigger-job amjil.job.job.TransformJob
                           params
                           (str "trans." current-time)
                           (str "trans." current-time)))
