@@ -64,7 +64,7 @@
 
 (defn query-sqlite-job-log [job]
   (let [date (:job_date job)
-        job-name (:job-nm job)]
+        job-name (:job_nm job)]
     (jdbc/query db/sqlite ["select * from job_logs where job_date = ? and job_nm = ?" date job-name])))
 
 (defn query-td-job-log [date]
